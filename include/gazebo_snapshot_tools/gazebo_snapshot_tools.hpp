@@ -26,6 +26,10 @@ namespace gazebo_snapshot_tools {
 
 namespace internal {
 
+/////////////////
+// Service utils
+/////////////////
+
 template < typename > struct ServiceOf;
 template < typename > struct ResponseOf;
 #define GST_DEFINE_REQUEST_TRAITS(Service)                                                         \
@@ -35,6 +39,8 @@ GST_DEFINE_REQUEST_TRAITS(gazebo_msgs::GetPhysicsProperties);
 GST_DEFINE_REQUEST_TRAITS(gazebo_msgs::SetLinkState);
 GST_DEFINE_REQUEST_TRAITS(std_srvs::Empty);
 
+// creates a service client ready to be called within the given timeout
+// (i.e. the existence of the service has been confirmed)
 template < typename Service >
 static inline ros::ServiceClient createCallableClient(const std::string &service_name,
                                                       const ros::Time &abs_timeout) {
@@ -46,6 +52,7 @@ static inline ros::ServiceClient createCallableClient(const std::string &service
   return client;
 }
 
+// calls the service associated to the given client with the given request within the given timeout
 template < typename Request >
 static inline typename ResponseOf< Request >::Type
 call(ros::ServiceClient *const client, const Request &request, const ros::Time &abs_timeout) {
@@ -59,6 +66,7 @@ call(ros::ServiceClient *const client, const Request &request, const ros::Time &
   return response;
 }
 
+// calls the given service with the given request within the given timeout
 template < typename Request >
 static inline typename ResponseOf< Request >::Type
 call(const std::string &service_name, const Request &request, const ros::Time &abs_timeout) {
@@ -67,6 +75,11 @@ call(const std::string &service_name, const Request &request, const ros::Time &a
   return call(&client, request, abs_timeout);
 }
 
+///////////////
+// Topic utils
+///////////////
+
+// receives the first message via the given topic within the given timeout
 template < typename Message >
 static inline typename ros::MessageEvent< const Message > receive(const std::string &topic_name,
                                                                   const ros::Time &abs_timeout) {
@@ -90,6 +103,11 @@ static inline typename ros::MessageEvent< const Message > receive(const std::str
   return event;
 }
 
+/////////////
+// Bag utils
+/////////////
+
+// writes the given message event to the given bagfile
 template < typename Message >
 static inline void write(const std::string &bag_path,
                          const typename ros::MessageEvent< Message > &event) {
@@ -103,6 +121,7 @@ static inline void write(const std::string &bag_path,
   bag.write(topic_name != header.end() ? topic_name->second : "", event);
 }
 
+// reads the first message event from the given bagfile
 template < typename Message >
 static inline typename ros::MessageEvent< Message > read(const std::string &bag_path) {
   rosbag::Bag bag(bag_path, rosbag::bagmode::Read);
@@ -123,10 +142,10 @@ static inline typename ros::MessageEvent< Message > read(const std::string &bag_
 
 } // namespace internal
 
+// receives the latest link states and write it to the given bagfile
 static inline void createSnapshot(const std::string &bag_path, const ros::Duration &timeout) {
   const ros::Time abs_timeout = ros::Time::now() + timeout;
 
-  // call get_physics_props
   bool should_unpause_pause;
   {
     const gazebo_msgs::GetPhysicsProperties::Response response =
@@ -143,11 +162,9 @@ static inline void createSnapshot(const std::string &bag_path, const ros::Durati
     internal::call("/gazebo/unpause_physics", std_srvs::Empty::Request(), abs_timeout);
   }
 
-  // sub
   const ros::MessageEvent< gazebo_msgs::LinkStates > link_states =
       internal::receive< gazebo_msgs::LinkStates >("/gazebo/link_states", abs_timeout);
 
-  // write
   internal::write(bag_path, link_states);
 
   if (should_unpause_pause) {
@@ -155,10 +172,10 @@ static inline void createSnapshot(const std::string &bag_path, const ros::Durati
   }
 }
 
+// reads link states from the given bagfile and set it to gazebo
 static inline void restoreSnapshot(const std::string &bag_path, const ros::Duration &timeout) {
   const ros::Time abs_timeout = ros::Time::now() + timeout;
 
-  // call get_physics_props
   bool should_pause_unpause;
   {
     const gazebo_msgs::GetPhysicsProperties::Response response =
@@ -175,11 +192,9 @@ static inline void restoreSnapshot(const std::string &bag_path, const ros::Durat
     internal::call("/gazebo/pause_physics", std_srvs::Empty::Request(), abs_timeout);
   }
 
-  // read
   const gazebo_msgs::LinkStatesConstPtr link_states =
       internal::read< gazebo_msgs::LinkStates >(bag_path).getConstMessage();
 
-  // call
   {
     ros::ServiceClient client = internal::createCallableClient< gazebo_msgs::SetLinkState >(
         "/gazebo/set_link_state", abs_timeout);
