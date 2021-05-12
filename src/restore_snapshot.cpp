@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
   ros::NodeHandle nh;
 
   const std::string bag_path = ros::param::param< std::string >("~snapshot_bag", "snapshot.bag");
-  const ros::Duration timeout(ros::param::param("~timeout", 10.));
+  const ros::WallDuration timeout(ros::param::param("~timeout", 10.));
 
   try {
     gazebo_snapshot_tools::restoreSnapshot(bag_path, timeout);

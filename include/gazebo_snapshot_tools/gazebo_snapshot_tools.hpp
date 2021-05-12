@@ -43,10 +43,11 @@ GST_DEFINE_REQUEST_TRAITS(std_srvs::Empty);
 // (i.e. the existence of the service has been confirmed)
 template < typename Service >
 static inline ros::ServiceClient createCallableClient(const std::string &service_name,
-                                                      const ros::Time &abs_timeout) {
+                                                      const ros::WallTime &abs_timeout) {
   ros::ServiceClient client =
       ros::service::createClient< Service >(service_name, /* persistent = */ true);
-  if (!client.waitForExistence(abs_timeout - ros::Time::now())) {
+  const ros::WallDuration timeout = abs_timeout - ros::WallTime::now();
+  if (!client.waitForExistence(ros::Duration(timeout.sec, timeout.nsec))) {
     throw std::runtime_error("createCallableClient(): " + client.getService() + " does not exist");
   }
   return client;
@@ -55,8 +56,8 @@ static inline ros::ServiceClient createCallableClient(const std::string &service
 // calls the service associated to the given client with the given request within the given timeout
 template < typename Request >
 static inline typename ResponseOf< Request >::Type
-call(ros::ServiceClient *const client, const Request &request, const ros::Time &abs_timeout) {
-  if (ros::Time::now() > abs_timeout) {
+call(ros::ServiceClient *const client, const Request &request, const ros::WallTime &abs_timeout) {
+  if (ros::WallTime::now() > abs_timeout) {
     throw std::runtime_error("call(): Reached timeout");
   }
   typename ResponseOf< Request >::Type response;
@@ -69,7 +70,7 @@ call(ros::ServiceClient *const client, const Request &request, const ros::Time &
 // calls the given service with the given request within the given timeout
 template < typename Request >
 static inline typename ResponseOf< Request >::Type
-call(const std::string &service_name, const Request &request, const ros::Time &abs_timeout) {
+call(const std::string &service_name, const Request &request, const ros::WallTime &abs_timeout) {
   ros::ServiceClient client =
       createCallableClient< typename ServiceOf< Request >::Type >(service_name, abs_timeout);
   return call(&client, request, abs_timeout);
@@ -81,8 +82,8 @@ call(const std::string &service_name, const Request &request, const ros::Time &a
 
 // receives the first message via the given topic within the given timeout
 template < typename Message >
-static inline typename ros::MessageEvent< const Message > receive(const std::string &topic_name,
-                                                                  const ros::Time &abs_timeout) {
+static inline typename ros::MessageEvent< const Message >
+receive(const std::string &topic_name, const ros::WallTime &abs_timeout) {
   ros::NodeHandle nh;
   ros::CallbackQueue cb_queue;
   nh.setCallbackQueue(&cb_queue);
@@ -92,9 +93,8 @@ static inline typename ros::MessageEvent< const Message > receive(const std::str
   void (Event::*const copy_event_f)(const Event &) = &Event::operator=;
   ros::Subscriber sub = nh.subscribe(topic_name, 1, copy_event_f, &event);
 
-  while (!event.getMessage() && abs_timeout > ros::Time::now()) {
-    const ros::Duration timeout = abs_timeout - ros::Time::now();
-    cb_queue.callOne(ros::WallDuration(timeout.sec, timeout.nsec));
+  while (!event.getMessage() && ros::WallTime::now() < abs_timeout) {
+    cb_queue.callOne(abs_timeout - ros::WallTime::now());
   }
   if (!event.getMessage()) {
     throw std::runtime_error(std::string("receive(): no ") +
@@ -143,8 +143,9 @@ static inline typename ros::MessageEvent< Message > read(const std::string &bag_
 } // namespace internal
 
 // receives the latest link states and write it to the given bagfile
-static inline void createSnapshot(const std::string &bag_path, const ros::Duration &timeout) {
-  const ros::Time abs_timeout = ros::Time::now() + timeout;
+static inline void createSnapshot(const std::string &bag_path, const ros::WallDuration &timeout) {
+  // use WallTime rather than Time because Time may not be advancing if gazebo is paused
+  const ros::WallTime abs_timeout = ros::WallTime::now() + timeout;
 
   bool should_unpause_pause;
   {
@@ -173,8 +174,8 @@ static inline void createSnapshot(const std::string &bag_path, const ros::Durati
 }
 
 // reads link states from the given bagfile and set it to gazebo
-static inline void restoreSnapshot(const std::string &bag_path, const ros::Duration &timeout) {
-  const ros::Time abs_timeout = ros::Time::now() + timeout;
+static inline void restoreSnapshot(const std::string &bag_path, const ros::WallDuration &timeout) {
+  const ros::WallTime abs_timeout = ros::WallTime::now() + timeout;
 
   bool should_pause_unpause;
   {
