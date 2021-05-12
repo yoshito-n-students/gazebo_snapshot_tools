@@ -93,14 +93,15 @@ receive(const std::string &topic_name, const ros::WallTime &abs_timeout) {
   void (Event::*const copy_event_f)(const Event &) = &Event::operator=;
   ros::Subscriber sub = nh.subscribe(topic_name, 1, copy_event_f, &event);
 
-  while (!event.getMessage() && ros::WallTime::now() < abs_timeout) {
+  while (true) {
     cb_queue.callOne(abs_timeout - ros::WallTime::now());
+    if (event.getMessage() && event.getReceiptTime() > ros::Time(0)) {
+      return event;
+    }
+    if (ros::WallTime::now() >= abs_timeout) {
+      throw std::runtime_error("receive(): no valid message via " + sub.getTopic());
+    }
   }
-  if (!event.getMessage()) {
-    throw std::runtime_error(std::string("receive(): no ") +
-                             ros::message_traits::datatype< Message >() + " received");
-  }
-  return event;
 }
 
 /////////////
