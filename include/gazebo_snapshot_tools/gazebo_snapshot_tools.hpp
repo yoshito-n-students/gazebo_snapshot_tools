@@ -2,6 +2,7 @@
 #define GAZEBO_SNAPSHOT_TOOLS_HPP
 
 #include <algorithm>
+#include <functional>
 #include <stdexcept>
 #include <string>
 
@@ -20,6 +21,7 @@
 #include <rosbag/message_instance.h>
 #include <rosbag/query.h>
 #include <rosbag/view.h>
+#include <sensor_msgs/Joy.h>
 #include <std_srvs/Empty.h>
 
 namespace gazebo_snapshot_tools {
@@ -215,6 +217,33 @@ static inline void restoreSnapshot(const std::string &bag_path, const ros::WallD
     internal::call("/gazebo/unpause_physics", std_srvs::Empty::Request(), abs_timeout);
   }
 }
+
+// a helper class that dispatches the given callback when the given button is newly pressed
+class JoyButtonHandler {
+public:
+  JoyButtonHandler(const int button_id, const std::function< void() > &callback)
+      : button_id_(button_id), callback_(callback), was_pressed_(false) {}
+
+  void handleJoy(const sensor_msgs::JoyConstPtr &joy) {
+    const bool is_pressed =
+        (button_id_ < joy->buttons.size() ? joy->buttons[button_id_] > 0 : false);
+
+    if (!was_pressed_ && is_pressed) {
+      try {
+        callback_();
+      } catch (const std::exception &error) {
+        ROS_ERROR_STREAM(error.what());
+      }
+    }
+
+    was_pressed_ = is_pressed;
+  }
+
+private:
+  const int button_id_;
+  const std::function< void() > callback_;
+  bool was_pressed_;
+};
 } // namespace gazebo_snapshot_tools
 
 #endif

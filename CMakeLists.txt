@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_msgs
   rosbag
   roscpp
+  sensor_msgs
   std_srvs
 )
 
@@ -106,7 +107,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES gazebo_snapshot_tools
-#  CATKIN_DEPENDS gazebo_msgs rosbag roscpp std_srvs
+  CATKIN_DEPENDS gazebo_msgs rosbag roscpp sensor_msgs std_srvs
 #  DEPENDS system_lib
 )
 
@@ -139,8 +140,16 @@ add_executable(
   src/create_snapshot.cpp
 )
 add_executable(
+  create_snapshot_by_joy
+  src/create_snapshot_by_joy.cpp
+)
+add_executable(
   restore_snapshot 
   src/restore_snapshot.cpp
+)
+add_executable(
+  restore_snapshot_by_joy
+  src/restore_snapshot_by_joy.cpp
 )
 add_executable(
   fake_gazebo
@@ -163,7 +172,15 @@ target_link_libraries(
   ${catkin_LIBRARIES}
 )
 target_link_libraries(
+  create_snapshot_by_joy
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(
   restore_snapshot
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(
+  restore_snapshot_by_joy
   ${catkin_LIBRARIES}
 )
 target_link_libraries(
