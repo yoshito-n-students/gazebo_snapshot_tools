@@ -97,7 +97,7 @@ receive(const std::string &topic_name, const ros::WallTime &abs_timeout) {
 
   while (true) {
     cb_queue.callOne(abs_timeout - ros::WallTime::now());
-    if (event.getMessage() && event.getReceiptTime() > ros::Time(0)) {
+    if (event.getMessage() && event.getReceiptTime() > ros::TIME_MIN) {
       return event;
     }
     if (ros::WallTime::now() >= abs_timeout) {
