@@ -6,7 +6,7 @@ creates and restores a snapshot bagfile of link states from/to Gazebo simulator
 
 ### Sequence
 
-<img src="https://github.com/yoshito-n-students/gazebo_snapshot_tools/raw/images/images/create_sequence.png" alt="create sequence" width="200" >
+<img src="https://github.com/yoshito-n-students/gazebo_snapshot_tools/raw/images/images/create_sequence.png" alt="create sequence" width="400" >
 
 ### Subscribed topics
 ___/gazebo/link_states___
@@ -22,7 +22,7 @@ ___~timeout___ (double, default: 10.0)
 
 ### Sequence
 
-<img src="https://github.com/yoshito-n-students/gazebo_snapshot_tools/raw/images/images/restore_sequence.png" alt="restore sequence" width="200" >
+<img src="https://github.com/yoshito-n-students/gazebo_snapshot_tools/raw/images/images/restore_sequence.png" alt="restore sequence" width="400" >
 
 ### Parameters
 ___~snapshot_bag___ (string, default: "snapshot.bag")
