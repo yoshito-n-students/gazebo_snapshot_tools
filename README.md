@@ -8,9 +8,6 @@ creates and restores a snapshot bagfile of link states from/to Gazebo simulator
 
 <img src="https://github.com/yoshito-n-students/gazebo_snapshot_tools/raw/images/images/create_sequence.png" alt="create sequence" width="400" >
 
-### Subscribed topics
-___/gazebo/link_states___
-
 ### Parameters
 ___~snapshot_bag___ (string, default: "snapshot.bag")
 * path to snapshot bag to write
