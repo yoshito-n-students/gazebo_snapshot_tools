@@ -29,7 +29,10 @@ ___~timeout___ (double, default: 10.0)
 * restoration timeout in sec
 
 ## create_snapshot_by_joy
-Called services, subscribed topics and parameters are same as create_snapshot
+Sequence and parameters are same as create_snapshot
+
+### Additional subscribed topics
+___joy___ (sensor_msgs/Joy)
 
 ### Additional parameters
 ___~button___ (int, default: 2)
@@ -37,7 +40,10 @@ ___~button___ (int, default: 2)
 * defaults to circle button of PS4 joystick
 
 ## restore_snapshot_by_joy
-Called services, subscribed topics and parameters are same as restore_snapshot
+Sequence and parameters are same as restore_snapshot
+
+### Additional subscribed topics
+___joy___ (sensor_msgs/Joy)
 
 ### Additional parameters
 ___~button___ (int, default: 1)
