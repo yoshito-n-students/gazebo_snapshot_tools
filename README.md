@@ -1,6 +1,6 @@
 # gazebo_snapshot_tools
 
-creates and restores a snapshot bagfile of link states from/to Gazebo simulator
+creates and restores a snapshot bag of link states from/to Gazebo simulator
 
 ## create_snapshot
 
