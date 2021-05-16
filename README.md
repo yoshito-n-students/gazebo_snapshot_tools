@@ -4,12 +4,9 @@ creates and restores a snapshot bagfile of link states from/to Gazebo simulator
 
 ## create_snapshot
 
-### Called services
-___/gazebo/get_phisics_properties___
+### Sequence
 
-___/gazebo/pause_physics___
-
-___/gazebo/unpause_physics___
+![](https://github.com/yoshito-n-students/gazebo_snapshot_tools/raw/images/images/create_sequence.png)
 
 ### Subscribed topics
 ___/gazebo/link_states___
@@ -23,12 +20,9 @@ ___~timeout___ (double, default: 10.0)
 
 ## restore_snapshot
 
-### Called services
-___/gazebo/get_phisics_properties___
+### Sequence
 
-___/gazebo/pause_physics___
-
-___/gazebo/unpause_physics___
+![](https://github.com/yoshito-n-students/gazebo_snapshot_tools/raw/images/images/restore_sequence.png)
 
 ### Parameters
 ___~snapshot_bag___ (string, default: "snapshot.bag")
